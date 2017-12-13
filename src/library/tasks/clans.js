@@ -7,12 +7,9 @@ import _BungieMembership from '../database/models/bungieMembership';
 export default class Clans {
     constructor(db, limit = 0) {
         let clans = clanList;
-        
-        if(limit !== 0 && !isNaN(limit)) {
-            clans = clans.slice(0, limit);
-        }
 
-        this.clans = clans;
+        this.clans = clanList;
+        this.limit = limit
         this.db = db;
     }
 
@@ -41,7 +38,7 @@ export default class Clans {
             });
     }
 
-    refreshMembers(members, clanId, groupId, t) {
+    refreshMemberships(members, clanId, groupId, t) {
         const BungieMembership = _BungieMembership(this.db);        
 
         return Promise.all(members.map(clanMember => {
@@ -71,9 +68,13 @@ export default class Clans {
                     .spread((member, created) => {
                         if(created === false) {
                             member
-                                .update(defaults, {fields : Object.keys(defaults)})
-                                .then(() => resolve(member));
+                                .update(defaults)
+                                .then(() => {
+                                    console.log("[UPDATED] " + JSON.stringify(member.get({plain: true})));
+                                    resolve(member);
+                                });
                         } else {
+                            console.log("[CREATED] " + JSON.stringify(member.get({ plain: true })));
                             resolve(member);
                         }
                     });
@@ -96,7 +97,7 @@ export default class Clans {
                             
                             try {
                                 this
-                                    .refreshMembers(clanData.members, clan.id, clanData.detail.groupId, t)
+                                    .refreshMemberships(clanData.members, clan.id, clanData.detail.groupId, t)
                                     .then(results => {
                                         return t.commit();
                                     })
@@ -107,7 +108,6 @@ export default class Clans {
                             catch(e) {
                                 t.rollback().then(() => reject(e));
                             }
- 
                             
                         });
                 });
@@ -127,10 +127,24 @@ export default class Clans {
     }
 
     async getClanData() {
+        let clans = this.clans;
+
+        if(this.limit != 0) {
+            const BungieClan = _BungieClan(this.db);
+            let queryObject  = {
+                order : 'updated_at ASC',
+                limit : this.limit
+            };
+
+            clans = await BungieClan.findAll(queryObject);
+        }
+
         return await Promise.all(
-            this.clans.map(
-                clanId => new ClanLibrary(clanId).getData()
-            )
+            clans.map(bungieClan => {
+                let clan = this.limit ? bungieClan.get({plain: true}) : {id : bungieClan};
+
+                return new ClanLibrary(clan.id).getData();
+            })
         );
     }
 }

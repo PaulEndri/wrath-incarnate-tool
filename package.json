@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "axios": "^0.17.1",
+    "dotenv": "^4.0.0",
     "mysql2": "^1.5.1",
     "sequelize": "^4.28.0"
   }

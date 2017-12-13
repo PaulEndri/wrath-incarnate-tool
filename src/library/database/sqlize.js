@@ -1,16 +1,19 @@
 'use strict';
 import Sequelize from 'sequelize';
+import dotenv from 'dotenv';
 
-const hostname = 'db.paulendri.com';
-const database = 'winpixelpub';
-const username = 'winpixelpub';
-const password = 'wrathIncarnate';
+const env = dotenv.config();
+const hostname = env.parsed.HOSTNAME;
+const database = env.parsed.DATABASE;
+const username = env.parsed.USERNAME;
+const password = env.parsed.PASSWORD;
 
 var connection = new Sequelize(database, username, password, {
     host    : hostname,
+    logging : false,
     dialect : "mysql",
     pool    : {
-        max:     30,
+        max:     40,
         min:     0,
         acquire: 1000000,
         idle:    10000,

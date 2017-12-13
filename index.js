@@ -1,9 +1,19 @@
 import sqlize   from './src/library/database/sqlize.js';
 import App from './src/app';
 
+let app   = new App(sqlize);
+let tasks = [
+    //'ClanTask',
+    'MemberTask'
+];
 
-let app = new App(sqlize);
-
-let data = app.run().then(data => {
-  console.log(JSON.stringify(data));
-});
+let data = app
+    .run(tasks)
+    .then(data => {
+        console.log("WE DONE BOIZ");
+        process.exit(0);
+    })
+    .catch(e => {
+        console.log(e);
+        process.exit(1)
+    });
