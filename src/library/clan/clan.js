@@ -1,3 +1,4 @@
+'use strict';
 import BungieApi from '../api/bungieApi';
 
 export default class Clan {

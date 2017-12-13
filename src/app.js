@@ -1,16 +1,23 @@
 'use strict';
-import Https from 'https';
-import clanList from './data/clans';
-import Clan from './library/clan/clan';
+import ClanTask from './library/tasks/clans';
 
 export default class App {
-  run() {
-    return new Promise(async (resolve, reject) => {
-      let id   = clanList[0];
-      let clan = new Clan(id);
-      let data = await clan.getData();
+  constructor(database) {
+    this.db = database;
+  }
 
-      resolve(data);
-    });
+  run() {
+    let task = new ClanTask(this.db);
+
+    return task
+      .run()
+      .then(r => {
+        console.log("EY WE WINNING BOIS");
+        process.exit(0);
+      })
+      .catch(e => {
+        console.log(e);
+        process.exit(1);
+      });
   }
 }
