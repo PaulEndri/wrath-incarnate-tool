@@ -70,11 +70,11 @@ export default class Clans {
                             member
                                 .update(defaults)
                                 .then(() => {
-                                    console.log("[UPDATED] " + JSON.stringify(member.get({plain: true})));
+                                    // console.log("[UPDATED] " + JSON.stringify(member.get({plain: true})));
                                     resolve(member);
                                 });
                         } else {
-                            console.log("[CREATED] " + JSON.stringify(member.get({ plain: true })));
+                            // console.log("[CREATED] " + JSON.stringify(member.get({ plain: true })));
                             resolve(member);
                         }
                     });

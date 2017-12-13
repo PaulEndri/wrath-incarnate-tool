@@ -15,6 +15,9 @@ export default class BungieApi {
                 url     : route
             })
                 .then(response => {
+                    if(response.data.Message !== "Ok") {
+                       // console.log(response.data);
+                    }
                     resolve(response.data.Response);
                 })
                 .catch(e => {

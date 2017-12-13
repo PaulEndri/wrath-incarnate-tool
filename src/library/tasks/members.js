@@ -3,8 +3,7 @@ import clanList from '../../data/clans';
 import MembershipLibrary from '../../library/clan/membership';
 import _BungieMember from '../database/models/bungieMember';
 import _BungieMembership from '../database/models/bungieMembership';
-var count = 0;
-var max = 0;
+
 export default class Members {
     constructor(db) {
         this.db = db;
@@ -13,18 +12,19 @@ export default class Members {
     async refreshGroupMembers(members, bungieMembers) {
         const BungieMember = _BungieMember(this.db);
         let transaction    = await this.db.transaction();
-
+        let delayCount     = 0;
+        
         let promises = members.map(membership => {
+            let delayedAmt = delayCount * 50;
+            delayCount++;
+
             return new Promise(async (resolve, reject) => {
+                await new Promise(resolve => setTimeout(resolve(delayCount), delayedAmt));
                 let membershipLibrary   = new MembershipLibrary(membership);
                 let bungieMemberProfile = await membershipLibrary.getProfile();
                 let destinyId           = membership.destiny_member_id;
 
-                count++;
-                console.log(`[UPDATE] Processing ${destinyId} - ${count}/${max}`);
-
                 if (!bungieMemberProfile || bungieMemberProfile === undefined) {
-                    count++;
                     console.warn("[WARNING] The following user id could not be found in bungie's systems " + membership.id);
 
                     return resolve();
@@ -32,13 +32,14 @@ export default class Members {
 
                 let memberData = bungieMemberProfile.profile.data;
                 let update     = {
-                    name:      memberData.userInfo.displayName,
-                    last_seen: memberData.dateLastPlayed,
-                    type:      membership.membership_type,
-                    bungie_id: membership.bungie_member_id,
-                    type:      membership.membership_type,
-                    data:      JSON.stringify({
-                        profile : memberData
+                    name:        memberData.userInfo.displayName,
+                    last_seen:   memberData.dateLastPlayed,
+                    type:        membership.membership_type,
+                    bungie_id:   membership.bungie_member_id,
+                    destiny_id:  destinyId,
+                    type:        membership.membership_type,
+                    data:        JSON.stringify({
+                        profile: memberData
                     })
                 };
 
@@ -80,6 +81,7 @@ export default class Members {
         let _bungieMembers     = await BungieMember.findAll();
         var bungieMembers      = {};
         var groupedMemberships = {};
+        var delayCount         = 0;
 
         _memberships.map(_membership => {
             let groupId = _membership.group_id;
@@ -95,20 +97,22 @@ export default class Members {
             bungieMembers[member.destiny_id] = member;
         });
 
-        max = _memberships.length;
-
-        return new Promise((_resolve, _reject) => {
+        return new Promise(async (_resolve, _reject) => {
             let groupedPromises = [];
 
             for(var groupId in groupedMemberships) {
                 let memberships = groupedMemberships[groupId];
+                let delayedAmt  = delayCount*3000;
+                delayCount++;
 
+                await new Promise(resolve => setTimeout(resolve(), delayedAmt));
                 groupedPromises.push(this.refreshGroupMembers(memberships, bungieMembers));
             }
 
             Promise
                 .all(groupedPromises)
-                .then(r => {
+                .then(async r => {
+                    await this.db.query("update bungie_membership ms join bungie_member m on m.destiny_id = ms.destiny_member_id set ms.member_id = m.id");
                     _resolve(r);
                 })
                 .catch(e => {
