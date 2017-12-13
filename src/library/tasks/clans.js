@@ -49,24 +49,33 @@ export default class Clans {
                 destiny_member_id : clanMember.destinyUserInfo.membershipId
             };
     
+            let defaults = {
+                clan_id:         clanId,
+                bungie_clan_id:  groupId,
+                membership_type: clanMember.destinyUserInfo.membershipType
+            };
+
             if(clanMember.bungieNetUserInfo !== undefined) {
                 where.bungie_member_id = clanMember.bungieNetUserInfo.membershipId
             }
 
             let _queryObject = {
-                where : where,
-                defaults : {
-                    clan_id : clanId,
-                    bungie_clan_id : groupId
-                },
-                transction : t
+                where:      where,
+                defaults:   defaults,
+                transction: t
             };
 
             return new Promise((resolve, reject) => {
                 BungieMembership
                     .findOrCreate(_queryObject)
                     .spread((member, created) => {
-                        resolve(member);
+                        if(created === false) {
+                            member
+                                .update(defaults, {fields : Object.keys(defaults)})
+                                .then(() => resolve(member));
+                        } else {
+                            resolve(member);
+                        }
                     });
             });
         }));
