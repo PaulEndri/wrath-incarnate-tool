@@ -3,8 +3,8 @@ import App from './src/app';
 
 let app   = new App(sqlize);
 let tasks = [
-    //'ClanTask',
-    'MemberTask'
+    'ClanTask',
+    //'MemberTask'
 ];
 
 let data = app

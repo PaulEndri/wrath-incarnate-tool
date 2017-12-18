@@ -10,13 +10,13 @@ const password = env.parsed.PASSWORD;
 
 var connection = new Sequelize(database, username, password, {
     host    : hostname,
-    logging : false,
+    logging : true,
     dialect : "mysql",
     pool    : {
         max:     40,
         min:     0,
-        acquire: 1000000,
-        idle:    10000,
+        acquire: 10000000,
+        idle:    100000,
         timeout: 10000000
     },
     define : {

@@ -11,14 +11,27 @@ export default class App {
     };
   }
 
-  run(types) {
-      let tasks = [];
+    run(types) {
+        return new Promise((resolve, reject) => {
+            let chain = false;
+            
+            for(var type of types) {
+                if(this.tasks[type] !== undefined && this.tasks[type] !== null) {
+                    let task = new this.tasks[type](this.db);
+    
+                    if(chain === false) {
+                        chain = task.run();
+                        continue;
+                    }
+    
+                    chain
+                        .then(() => task.run());
+                }
+            }
 
-      for(var type of types) {
-          if(this.tasks[type] !== undefined && this.tasks[type] !== null) {
-              tasks.push(new this.tasks[type](this.db).run());
-          }
-      }
-      return Promise.all(tasks);
-  }
+            chain
+                .then(() => resolve())
+                .catch(e => reject(e));
+        });
+    }
 }

@@ -7,7 +7,8 @@ export default function Model(database) {
             data:         Sqlize.TEXT,
             deleted:      Sqlize.BOOLEAN,
             group_id:     Sqlize.INTEGER,
-            name:         Sqlize.STRING
+            name:         Sqlize.STRING,
+            member_count : Sqlize.INTEGER
         }
     )
 };

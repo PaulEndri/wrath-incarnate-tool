@@ -1,8 +1,10 @@
 import axios from 'axios';
+import dotenv from 'dotenv';
 
+const env = dotenv.config();
 const API_ROOT = "https://www.bungie.net/Platform";
 const HEADER   = {
-    'X-API-KEY'    : "e5198b48b5504e828e2daefe47cfad5c",
+    'X-API-KEY'    : env.parsed.BUNGIE_API_KEY,
     'Content-Type' : 'application/json'
 }
 

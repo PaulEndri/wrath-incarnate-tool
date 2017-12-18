@@ -23,7 +23,8 @@ export default class Clans {
                 name     : clanData.detail.name,
             },
             defaults : {
-                data : JSON.stringify(submittedData)
+                data : JSON.stringify(submittedData),
+                member_count : clanData.detail.memberCount
             },
             transaction : t
         }
@@ -83,8 +84,38 @@ export default class Clans {
 
     }
 
-    async run() {     
-        var data = await this.getClanData();
+    runMulti(data) {
+        let parsedData = [];
+        let runs       = [];
+
+        for(let i = 0; i < Math.ceil(data.length/15); i++) {
+            parsedData.push(data.slice(i*15, i*15+15));
+        }
+
+        // We're going to want to trigger
+        // sequentially to save our old
+        // shitty database some more stress
+        return new Promise((resolve, reject) => {
+            let chain = this.run(parsedData.shift());
+
+            for(let chunk of parsedData) {
+
+                chain.then(results => {
+                    return this.run(chunk)
+                });
+            }
+            chain.then(() => {
+                console.log('done but not resolving');
+            });
+        });
+    }
+
+    async run(_data = false) {     
+        var data = _data ? _data : await this.getClanData();
+        console.log("running with " + data.length);
+        if(data.length > 15) {
+            return this.runMulti(data);
+        }
 
         return new Promise((_resolve, _reject) => {
             var clanPromises = data.map(clanData => {
@@ -132,7 +163,7 @@ export default class Clans {
         if(this.limit != 0) {
             const BungieClan = _BungieClan(this.db);
             let queryObject  = {
-                order : 'updated_at ASC',
+                order : [['updated_at', 'ASC']],
                 limit : this.limit
             };
 

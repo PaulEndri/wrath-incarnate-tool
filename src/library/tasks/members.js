@@ -32,6 +32,7 @@ export default class Members {
 
                 let memberData = bungieMemberProfile.profile.data;
                 let update     = {
+                    deleted:     false,
                     name:        memberData.userInfo.displayName,
                     last_seen:   memberData.dateLastPlayed,
                     type:        membership.membership_type,
@@ -74,14 +75,17 @@ export default class Members {
             });
     }
 
-    async run() {     
+    async run(groupId) {
+        const memberWhere      = { group_id : groupId}
         const BungieMembership = _BungieMembership(this.db);
         const BungieMember     = _BungieMember(this.db);
-        let _memberships       = await BungieMembership.findAll({ raw: true });
+        let _memberships       = await BungieMembership.findAll({ where: memberWhere, raw: true });
         let _bungieMembers     = await BungieMember.findAll();
+        let delayCount         = 0;
         var bungieMembers      = {};
         var groupedMemberships = {};
-        var delayCount         = 0;
+
+        await this.db.query("update bungie_member set deleted = 1");
 
         _memberships.map(_membership => {
             let groupId = _membership.group_id;
@@ -112,7 +116,7 @@ export default class Members {
             Promise
                 .all(groupedPromises)
                 .then(async r => {
-                    await this.db.query("update bungie_membership ms join bungie_member m on m.destiny_id = ms.destiny_member_id set ms.member_id = m.id");
+                    await this.db.query("update bungie_membership ms join bungie_member m on m.destiny_id = ms.destiny_member_id set ms.member_id = m.id, ms.deleted = m.deleted");
                     _resolve(r);
                 })
                 .catch(e => {
